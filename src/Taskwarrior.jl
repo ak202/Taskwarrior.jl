@@ -1,4 +1,4 @@
-module JuliTask
+module Taskwarrior
 
 import JSON
 using Dates
@@ -47,6 +47,12 @@ tasks = JSON.parse(read(`task export`, String))
 
 Return a table (as a Dictionary) of Taskwarrior 
 tasks.
+
+# Arguments
+-  'x::Array{String,1}=colnames()' : select which task attributes are returned.
+
+# Examples
+tasktable(["uuid", "entry", "description"])
 """
 function tasktable(colnames::Array{String, 1} = colnames())
 	columns = Dict{String, Array}()

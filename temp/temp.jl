@@ -35,4 +35,10 @@ catch
 	println("moar internets")
 end
 
-test = ["description", "entry", "uuid"]
+colnames()
+test = ["description", "entry", "baseValue"]
+table = DataFrame(tasktable(test))
+
+testtable = DataFrame(tasktable(["tags"]))
+testarray = collect(skipmissing(testtable[:1]))
+testarray[819]

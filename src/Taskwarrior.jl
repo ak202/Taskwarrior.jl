@@ -24,8 +24,6 @@ end
 function colnames()
 	collect(keys(colspecs))
 end
-
-tasknames = colnames()
  
 function taskDateTime(dateString)
 	if ismissing(dateString)

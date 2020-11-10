@@ -3,13 +3,30 @@ module JuliTask
 import JSON
 using Dates
 
-export task_columns, task_table, tasks
+export colnames, tasktable
 
-struct tw_column
-	name::String
-	type::DataType
+colspecs = Dict{String, DataType}()
+for line in readlines(`task columns`)
+	result = match(r"([[:alnum:]]+)( +)([[:alnum:]]+)", line)
+	if typeof(result) == Nothing
+		continue
+	elseif result.captures[3] in ["string", "date", "numeric"]
+		if result.captures[3] == "string"
+			push!(colspecs, result.captures[1] => String)
+		elseif result.captures[3] == "date"
+			push!(colspecs, result.captures[1] => DateTime)
+		else
+			push!(colspecs, result.captures[1] => Float64)
+		end
+	end
 end
 
+function colnames()
+	collect(keys(colspecs))
+end
+
+tasknames = colnames()
+ 
 function taskDateTime(dateString)
 	if ismissing(dateString)
 		return missing
@@ -25,60 +42,30 @@ end
 
 tasks = JSON.parse(read(`task export`, String))
 
-task_columns = function()
-	twColumns = tw_column[]
-	for line in readlines(`task columns`)
-		result = match(r"([[:alnum:]]+)( +)([[:alnum:]]+)", line)
-		if typeof(result) == Nothing
-			continue
-		elseif result.captures[3] in ["string", "date", "numeric"]
-			if result.captures[3] == "string"
-				push!(twColumns, tw_column(result.captures[1], String))
-			elseif result.captures[3] == "date"
-				push!(twColumns, tw_column(result.captures[1], DateTime))
-			else
-				push!(twColumns, tw_column(result.captures[1], Float64))
-			end
+"""
+    tasktable(x = colnames())
+
+Return a table (as a Dictionary) of Taskwarrior 
+"""
+function tasktable(colnames::Array{String, 1} = colnames())
+	columns = Dict{String, Array}()
+	for colname in colnames
+		println(colname)
+		coltype = get(colspecs, colname, String)
+		if colname == "tags"
+			coltype = Array{String, 1}
 		end
-	end
-	return twColumns
-end
-
-function task_columns_old()
-	colnames = String[]
-	for task in tasks for key in keys(task)
-			if !(key in colnames)
-				push!(colnames, key)
+		column = Union{coltype, Missing}[]
+		for task in tasks
+			value = get(task, colname, missing)
+			if coltype == DateTime
+				value = taskDateTime(value)
 			end
+			push!(column, value)
 		end
+		push!(columns, colname => column)
 	end
-	return colnames
+	columns
 end
-
-struct TWTask
-	uuid::String
-	entry::Union{DateTime, Missing}
-	scheduled::Union{DateTime, Missing}
-	wait::Union{DateTime, Missing}
-	due::Union{DateTime, Missing}
-	until::Union{DateTime, Missing}
-	termination::Union{DateTime, Missing}
-end
-
-function task_table()
-	twtasks = TWTask[]
-	for task in tasks
-		uuid = get(task, "uuid", missing)
-		entry = get(task, "entry", missing) |> taskDateTime
-		scheduled = get(task, "scheduled", missing) |> taskDateTime
-		wait = get(task, "wait", missing) |> taskDateTime
-		due = get(task, "due", missing) |> taskDateTime
-		until = get(task, "until", missing) |> taskDateTime
-		termination = get(task, "termination", missing) |> taskDateTime
-		push!(twtasks, TWTask(uuid, entry, scheduled, wait, due, until, termination))
-	end
-	return twtasks
-end
-
 
 end # module

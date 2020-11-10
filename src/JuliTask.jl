@@ -46,11 +46,11 @@ tasks = JSON.parse(read(`task export`, String))
     tasktable(x = colnames())
 
 Return a table (as a Dictionary) of Taskwarrior 
+tasks.
 """
 function tasktable(colnames::Array{String, 1} = colnames())
 	columns = Dict{String, Array}()
 	for colname in colnames
-		println(colname)
 		coltype = get(colspecs, colname, String)
 		if colname == "tags"
 			coltype = Array{String, 1}

@@ -29,6 +29,7 @@ for i in 1:length(dates)
 	initialPoints = 0
 	push!(chartDF, (date, initialPoints, initialPoints, initialPoints, initialPoints))
 end
+
 try
 	run(`task sync`)
 catch

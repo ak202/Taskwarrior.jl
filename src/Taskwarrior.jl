@@ -3,7 +3,7 @@ module Taskwarrior
 import JSON
 using Dates
 
-export colnames, tasktable
+export colnames, tasktable, taskjson
 
 colspecs = Dict{String, DataType}()
 for line in readlines(`task columns`)
@@ -38,7 +38,9 @@ function taskDateTime(dateString)
 	DateTime(year, month, day, hour, minute, second)
 end
 
-tasks = JSON.parse(read(`task export`, String))
+function taskjson()
+	JSON.parse(read(`task export`, String))
+end
 
 """
     tasktable(x = colnames())
@@ -53,6 +55,7 @@ tasks.
 tasktable(["uuid", "entry", "description"])
 """
 function tasktable(colnames::Array{String, 1} = colnames())
+	tasks = taskjson()
 	columns = Dict{String, Array}()
 	for colname in colnames
 		coltype = get(colspecs, colname, String)
